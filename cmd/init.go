@@ -60,7 +60,10 @@ var initCmd = &cobra.Command{
 		project.Configure(scaffold.Name(args[0]), scaffold.ProjectDir(project.ProjectDir))
 
 		if project.CreateRepo {
-			viper.Unmarshal(&repo)
+			if err := viper.Unmarshal(&repo); err != nil {
+				fmt.Printf("error unpacking repo info: %s\n", err)
+				os.Exit(1)
+			}
 			repo.Name = project.Name
 			project.Repo = repo
 		}
