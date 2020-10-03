@@ -31,12 +31,8 @@ type option func(*GithubRepository)
 func New(name string, options ...option) (*GithubRepository, error) {
 	r := GithubRepository{
 		Name:              name,
-		ServerURL:         "",
-		Organization:      "",
-		GithubAccessToken: "",
 		License:           "mit",
 		ProjectDir:        ".",
-		CloneURL:          "",
 	}
 	for _, opt := range options {
 		opt(&r)
