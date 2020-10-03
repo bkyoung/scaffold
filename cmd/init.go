@@ -76,11 +76,10 @@ var initCmd = &cobra.Command{
 			}
 
 			// Set the go module's name according to the repo URL
-			url, err := project.Repo.URL()
-			if err != nil {
-
+			// TODO: better algo for this, so we can use it with ANY conn type
+			if url, err := project.Repo.URL(); err == nil && len(url) > 9{
+				project.GoModuleName = url[8:]
 			}
-			project.GoModuleName = url[8:]
 		}
 
 		// Clone the repo
