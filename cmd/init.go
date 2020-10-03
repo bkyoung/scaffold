@@ -24,7 +24,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/bkyoung/scaffold/internal/git"
@@ -61,7 +60,10 @@ var initCmd = &cobra.Command{
 		project.Configure(scaffold.Name(args[0]), scaffold.ProjectDir(project.ProjectDir))
 
 		if project.CreateRepo {
-			viper.Unmarshal(&repo)
+			if err := viper.Unmarshal(&repo); err != nil {
+				fmt.Printf("error unpacking repo info: %s\n", err)
+				os.Exit(1)
+			}
 			repo.Name = project.Name
 			project.Repo = repo
 		}
@@ -77,22 +79,21 @@ var initCmd = &cobra.Command{
 			}
 
 			// Set the go module's name according to the repo URL
-			url, err := project.Repo.URL();if err != nil {
-
-			}
-			project.GoModuleName = url[8:]
-
-			// Clone the repo
-			err = git.Clone(url, project.ProjectDir, repo.GithubAccessToken, os.Stdout)
-			if err != nil {
-				fmt.Printf("error cloning repository: %s\n", err)
-				os.Exit(1)
+			// TODO: better algo for this, so we can use it with ANY conn type
+			if url, err := project.Repo.URL(); err == nil && len(url) > 9{
+				project.GoModuleName = url[8:]
 			}
 		}
 
+		// Clone the repo
+		if err := project.Repo.Clone(os.Stdout); err != nil {
+			fmt.Printf("error cloning repository: %s\n", err)
+			os.Exit(1)
+		}
+
 		// If the go module's name is still not set, just set it to the project name
-		if project.ModuleName == "" {
-			project.ModuleName = project.Name
+		if project.GoModuleName == "" {
+			project.GoModuleName = project.Name
 		}
 
 		// Create the local project structure
