@@ -56,8 +56,21 @@ var initCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		module := args[0]
+		if module == "" {
+			fmt.Printf("no name passed on command line")
+			os.Exit(1)
+		}
+
+		name := module
+		if project.ProjectDir == "" {
+			ns := strings.Split(name, "/")
+			name = ns[len(ns)-1]
+			project.ProjectDir = name
+		}
+
 		// Additional arg processing
-		project.Configure(scaffold.Name(args[0]), scaffold.ProjectDir(project.ProjectDir))
+		project.Configure(scaffold.Name(name), scaffold.GoModuleName(module), scaffold.ProjectDir(project.ProjectDir))
 
 		if project.CreateRepo {
 			if err := viper.Unmarshal(&repo); err != nil {
@@ -80,15 +93,15 @@ var initCmd = &cobra.Command{
 
 			// Set the go module's name according to the repo URL
 			// TODO: better algo for this, so we can use it with ANY conn type
-			if url, err := project.Repo.URL(); err == nil && len(url) > 9{
+			if url, err := project.Repo.URL(); err == nil && len(url) > 9 {
 				project.GoModuleName = url[8:]
 			}
-		}
 
-		// Clone the repo
-		if err := project.Repo.Clone(os.Stdout); err != nil {
-			fmt.Printf("error cloning repository: %s\n", err)
-			os.Exit(1)
+			// Clone the repo
+			if err := project.Repo.Clone(os.Stdout); err != nil {
+				fmt.Printf("error cloning repository: %s\n", err)
+				os.Exit(1)
+			}
 		}
 
 		// If the go module's name is still not set, just set it to the project name
